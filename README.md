@@ -1,5 +1,7 @@
 # Dataset Augmentation Studio
 
+This is my first task in the Internship i have joined where, i was to design a prototype for the augmentation for the various conditions on it , where one can manipulate the image binding datasets and create more generalized dataset so that one can create and build a perfect model which can have all the different conditions . 
+
 A local, full-stack desktop web application for inspecting and augmenting computer-vision datasets with YOLO bounding-box annotations.
 
 Built with a **FastAPI** Python backend and a **React + TypeScript + Vite + Tailwind CSS** frontend, Dataset Augmentation Studio runs entirely offline on your local machine, preserving data privacy and allowing fast iterations on object detection datasets.
