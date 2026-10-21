@@ -1,21 +1,22 @@
 import React, { useState } from 'react'
 import {
-  Layers, FlipHorizontal, FlipVertical, RotateCcw, RefreshCw,
-  Scissors, Crop, ZoomIn, Square, Grid2x2, ChevronDown, ChevronUp
+  Layers,
+  FlipHorizontal,
+  FlipVertical,
+  RotateCcw,
+  RefreshCw,
+  Scissors,
+  Crop,
+  ZoomIn,
+  Square,
+  Grid2x2,
+  ChevronUp,
+  SlidersHorizontal,
 } from 'lucide-react'
-import { Toggle } from './ui'
+import { SectionCard, Toggle, Badge } from './ui'
 import type { AugmentationConfig } from '../api'
 
 // ---- Types -----------------------------------------------------------------
-
-interface AugCardDef {
-  id: string
-  label: string
-  description: string
-  icon: React.ReactNode
-  defaultParams: Record<string, unknown>
-  settings?: SettingDef[]
-}
 
 interface SettingDef {
   key: string
@@ -27,40 +28,49 @@ interface SettingDef {
   default: number
 }
 
+interface AugCardDef {
+  id: string
+  label: string
+  description: string
+  icon: React.ReactNode
+  defaultParams: Record<string, unknown>
+  settings?: SettingDef[]
+}
+
 // ---- Augmentation definitions ---------------------------------------------
 
 const AUG_CARDS: AugCardDef[] = [
   {
     id: 'flip_h',
     label: 'Horizontal Flip',
-    description: 'Flip image horizontally',
-    icon: <FlipHorizontal size={22} />,
+    description: 'Flip horizontally',
+    icon: <FlipHorizontal size={18} />,
     defaultParams: {},
     settings: [],
   },
   {
     id: 'flip_v',
     label: 'Vertical Flip',
-    description: 'Flip image vertically',
-    icon: <FlipVertical size={22} />,
+    description: 'Flip vertically',
+    icon: <FlipVertical size={18} />,
     defaultParams: {},
     settings: [],
   },
   {
     id: 'rotate',
     label: 'Rotation',
-    description: 'Rotate by custom angle',
-    icon: <RotateCcw size={22} />,
+    description: 'Custom angle rotation',
+    icon: <RotateCcw size={18} />,
     defaultParams: { angle: 30 },
     settings: [
-      { key: 'angle', label: 'Angle (degrees)', type: 'range', min: -180, max: 180, step: 1, default: 30 },
+      { key: 'angle', label: 'Angle (�)', type: 'range', min: -180, max: 180, step: 1, default: 30 },
     ],
   },
   {
     id: 'rotate360',
-    label: '360° Rotation',
-    description: 'Generate X rotated images',
-    icon: <RefreshCw size={22} />,
+    label: '360� Rotation',
+    description: 'N-angle full circle generator',
+    icon: <RefreshCw size={18} />,
     defaultParams: { count: 4 },
     settings: [
       { key: 'count', label: 'Interval count (X)', type: 'number', min: 2, max: 36, step: 1, default: 4 },
@@ -69,8 +79,8 @@ const AUG_CARDS: AugCardDef[] = [
   {
     id: 'shear',
     label: 'Shear',
-    description: 'Apply shear transformation',
-    icon: <Scissors size={22} />,
+    description: 'Affine shear skew',
+    icon: <Scissors size={18} />,
     defaultParams: { shear_x: 0.2, shear_y: 0.0 },
     settings: [
       { key: 'shear_x', label: 'Shear X', type: 'range', min: -0.5, max: 0.5, step: 0.05, default: 0.2 },
@@ -80,8 +90,8 @@ const AUG_CARDS: AugCardDef[] = [
   {
     id: 'crop',
     label: 'Crop',
-    description: 'Crop a region from image',
-    icon: <Crop size={22} />,
+    description: 'Margin crop region',
+    icon: <Crop size={18} />,
     defaultParams: { crop_x: 0.1, crop_y: 0.1 },
     settings: [
       { key: 'crop_x', label: 'Crop X margin', type: 'range', min: 0.01, max: 0.4, step: 0.01, default: 0.1 },
@@ -91,8 +101,8 @@ const AUG_CARDS: AugCardDef[] = [
   {
     id: 'zoom',
     label: 'Zoom',
-    description: 'Zoom in or out',
-    icon: <ZoomIn size={22} />,
+    description: 'Scale in or out',
+    icon: <ZoomIn size={18} />,
     defaultParams: { scale: 1.2 },
     settings: [
       { key: 'scale', label: 'Scale factor', type: 'range', min: 0.5, max: 2.5, step: 0.05, default: 1.2 },
@@ -101,19 +111,19 @@ const AUG_CARDS: AugCardDef[] = [
   {
     id: 'cutout',
     label: 'Cutout',
-    description: 'Randomly mask regions',
-    icon: <Square size={22} />,
+    description: 'Random occlusion masking',
+    icon: <Square size={18} />,
     defaultParams: { num_holes: 3, hole_size: 0.1 },
     settings: [
       { key: 'num_holes', label: 'Number of holes', type: 'number', min: 1, max: 10, step: 1, default: 3 },
-      { key: 'hole_size', label: 'Hole size (fraction)', type: 'range', min: 0.05, max: 0.4, step: 0.01, default: 0.1 },
+      { key: 'hole_size', label: 'Hole size fraction', type: 'range', min: 0.05, max: 0.4, step: 0.01, default: 0.1 },
     ],
   },
   {
     id: 'mosaic',
     label: 'Mosaic',
-    description: 'Combine 4 images into grid',
-    icon: <Grid2x2 size={22} />,
+    description: '2�2 4-image synthesis',
+    icon: <Grid2x2 size={18} />,
     defaultParams: {},
     settings: [],
   },
@@ -127,65 +137,111 @@ interface AugCardProps {
   params: Record<string, unknown>
   onToggle: () => void
   onParamChange: (key: string, val: number) => void
+  disabled?: boolean
 }
 
-const AugCard: React.FC<AugCardProps> = ({ card, selected, params, onToggle, onParamChange }) => {
+const AugCard: React.FC<AugCardProps> = ({
+  card,
+  selected,
+  params,
+  onToggle,
+  onParamChange,
+  disabled = false,
+}) => {
   const [expanded, setExpanded] = useState(false)
-  const hasSettings = card.settings && card.settings.length > 0
+  const hasSettings = Boolean(card.settings && card.settings.length > 0)
+
+  // Settings are hidden until the card is selected
+  const showSettings = selected && hasSettings && expanded
 
   return (
     <div
-      className={`aug-card border-2 rounded-xl p-3 transition-all select-none ${
-        selected
-          ? 'border-blue-500 bg-blue-50'
-          : 'border-slate-200 bg-white hover:border-blue-300'
+      className={`border rounded-xl p-2.5 transition-all select-none flex flex-col justify-between ${
+        disabled
+          ? 'opacity-60 bg-slate-50/60 border-slate-200 cursor-not-allowed'
+          : selected
+          ? 'border-blue-500 bg-blue-50/70 shadow-xs'
+          : 'border-slate-200/90 bg-white hover:border-blue-300 hover:shadow-xs'
       }`}
     >
-      {/* Header row */}
-      <div className="flex items-start gap-3">
-        {/* Checkbox */}
-        <input
-          type="checkbox"
-          checked={selected}
-          onChange={onToggle}
-          className="mt-0.5 w-4 h-4 rounded accent-blue-600 cursor-pointer shrink-0"
-        />
+      <div>
+        {/* Header row */}
+        <div className="flex items-start gap-2">
+          {/* Accessible Checkbox */}
+          <input
+            type="checkbox"
+            checked={selected}
+            disabled={disabled}
+            onChange={onToggle}
+            aria-label={`Toggle ${card.label}`}
+            className="mt-0.5 w-4 h-4 rounded accent-blue-600 cursor-pointer shrink-0 disabled:cursor-not-allowed"
+          />
 
-        {/* Icon */}
-        <div
-          className={`p-2 rounded-lg shrink-0 ${
-            selected ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-500'
-          }`}
-          onClick={onToggle}
-        >
-          {card.icon}
-        </div>
-
-        {/* Text */}
-        <div className="flex-1 min-w-0 cursor-pointer" onClick={onToggle}>
-          <p className="text-sm font-semibold text-slate-800">{card.label}</p>
-          <p className="text-xs text-slate-500 mt-0.5">{card.description}</p>
-        </div>
-
-        {/* Expand button */}
-        {hasSettings && (
-          <button
-            onClick={e => { e.stopPropagation(); setExpanded(v => !v) }}
-            className="p-1 rounded hover:bg-slate-100 text-slate-400"
+          {/* Icon */}
+          <div
+            className={`p-1.5 rounded-md shrink-0 transition-colors ${
+              selected ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'
+            }`}
           >
-            {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-          </button>
+            {card.icon}
+          </div>
+
+          {/* Labels */}
+          <div
+            className="flex-1 min-w-0 cursor-pointer"
+            onClick={() => !disabled && onToggle()}
+          >
+            <p className="text-xs sm:text-sm font-semibold text-slate-800 leading-tight truncate">
+              {card.label}
+            </p>
+            <p className="text-[11px] text-slate-400 leading-tight mt-0.5 truncate">
+              {card.description}
+            </p>
+          </div>
+
+          {/* Contextual Settings toggle button (only visible when selected!) */}
+          {selected && hasSettings && (
+            <button
+              type="button"
+              onClick={e => {
+                e.stopPropagation()
+                setExpanded(v => !v)
+              }}
+              title="Configure parameters"
+              className="p-1 rounded text-blue-700 hover:bg-blue-100/80 transition-colors shrink-0"
+            >
+              {expanded ? <ChevronUp size={14} /> : <SlidersHorizontal size={14} />}
+            </button>
+          )}
+        </div>
+
+        {/* Quick parameters summary badge when selected but collapsed */}
+        {selected && hasSettings && !expanded && (
+          <div className="mt-1.5 pt-1 border-t border-blue-200/50 flex items-center justify-between text-[10px] text-blue-700">
+            <span className="truncate">
+              {card.settings?.map(s => `${s.label.split(' ')[0]}: ${Number(params[s.key] ?? s.default)}`).join(', ')}
+            </span>
+            <button
+              type="button"
+              onClick={() => setExpanded(true)}
+              className="font-medium hover:underline ml-1 shrink-0"
+            >
+              Adjust
+            </button>
+          </div>
         )}
       </div>
 
-      {/* Expanded settings */}
-      {hasSettings && expanded && (
-        <div className="mt-3 pt-3 border-t border-slate-100 flex flex-col gap-3">
+      {/* Contextual Settings Section (hidden until relevant) */}
+      {showSettings && (
+        <div className="mt-2 pt-2 border-t border-blue-200/60 flex flex-col gap-2 fade-in">
           {card.settings!.map(setting => (
             <div key={setting.key}>
-              <div className="flex items-center justify-between mb-1">
-                <label className="text-xs text-slate-600 font-medium">{setting.label}</label>
-                <span className="text-xs font-mono text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded">
+              <div className="flex items-center justify-between mb-0.5">
+                <label className="text-[11px] text-slate-700 font-medium truncate">
+                  {setting.label}
+                </label>
+                <span className="text-[10px] font-mono text-blue-800 bg-white/80 border border-blue-200 px-1 py-0.2 rounded shrink-0">
                   {Number(params[setting.key] ?? setting.default).toFixed(
                     setting.step && setting.step < 1 ? 2 : 0
                   )}
@@ -199,7 +255,7 @@ const AugCard: React.FC<AugCardProps> = ({ card, selected, params, onToggle, onP
                   step={setting.step}
                   value={Number(params[setting.key] ?? setting.default)}
                   onChange={e => onParamChange(setting.key, Number(e.target.value))}
-                  className="w-full accent-blue-600"
+                  className="w-full accent-blue-600 h-1.5 cursor-pointer"
                 />
               ) : (
                 <input
@@ -209,19 +265,8 @@ const AugCard: React.FC<AugCardProps> = ({ card, selected, params, onToggle, onP
                   step={setting.step}
                   value={Number(params[setting.key] ?? setting.default)}
                   onChange={e => onParamChange(setting.key, Number(e.target.value))}
-                  className="w-full border border-slate-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-slate-300 rounded px-2 py-0.5 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
-              )}
-              {/* Show generated angles for rotate360 */}
-              {card.id === 'rotate360' && setting.key === 'count' && (
-                <p className="text-xs text-slate-400 mt-1">
-                  Generates angles:{' '}
-                  {Array.from({ length: Number(params[setting.key] ?? setting.default) }, (_, i) => {
-                    const count = Number(params[setting.key] ?? setting.default)
-                    const angle = ((i + 1) * 360) / count
-                    return angle < 360 ? `${Math.round(angle)}°` : null
-                  }).filter(Boolean).join(', ')}
-                </p>
               )}
             </div>
           ))}
@@ -241,12 +286,15 @@ interface Props {
 }
 
 const AugmentationPanel: React.FC<Props> = ({
-  enabled, onEnabledChange, selectedAugs, onAugsChange
+  enabled,
+  onEnabledChange,
+  selectedAugs,
+  onAugsChange,
 }) => {
   const getConfig = (id: string): AugmentationConfig | undefined =>
     selectedAugs.find(a => a.type === id)
 
-  const isSelected = (id: string) => !!getConfig(id)
+  const isSelected = (id: string) => Boolean(getConfig(id))
 
   const toggleCard = (card: AugCardDef) => {
     if (isSelected(card.id)) {
@@ -257,56 +305,111 @@ const AugmentationPanel: React.FC<Props> = ({
   }
 
   const updateParam = (id: string, key: string, val: number) => {
-    onAugsChange(selectedAugs.map(a =>
-      a.type === id ? { ...a, params: { ...a.params, [key]: val } } : a
-    ))
+    onAugsChange(
+      selectedAugs.map(a =>
+        a.type === id ? { ...a, params: { ...a.params, [key]: val } } : a
+      )
+    )
   }
 
-  return (
-    <div className="bg-white rounded-xl border-2 border-slate-200 shadow-sm overflow-hidden">
-      {/* Header with toggle */}
-      <div className="flex items-center gap-4 px-5 py-4 border-b border-slate-100">
-        <div className="section-badge text-white bg-emerald-500">3</div>
-        <div className="text-emerald-500"><Layers size={18} /></div>
-        <h2 className="text-base font-semibold text-slate-800">Image Augmentation</h2>
-        <div className="ml-2">
-          <Toggle
-            checked={enabled}
-            onChange={onEnabledChange}
-            label="Enable image augmentation and select transformations"
-          />
-        </div>
-      </div>
+  const handleSelectAll = () => {
+    const allConfigs: AugmentationConfig[] = AUG_CARDS.map(card => ({
+      type: card.id,
+      params: { ...card.defaultParams },
+    }))
+    onAugsChange(allConfigs)
+  }
 
-      {enabled && (
-        <div className="p-5 fade-in">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-            {AUG_CARDS.map(card => (
-              <AugCard
-                key={card.id}
-                card={card}
-                selected={isSelected(card.id)}
-                params={getConfig(card.id)?.params ?? card.defaultParams}
-                onToggle={() => toggleCard(card)}
-                onParamChange={(key, val) => updateParam(card.id, key, val)}
-              />
-            ))}
-          </div>
+  const handleClearAll = () => {
+    onAugsChange([])
+  }
 
-          {selectedAugs.length === 0 && (
-            <p className="text-center text-sm text-slate-400 mt-4">
-              Select at least one augmentation above.
-            </p>
-          )}
-        </div>
+  // Header action: Toggle + Selected count chip
+  const headerAction = (
+    <div className="flex items-center gap-2.5">
+      {enabled && selectedAugs.length > 0 && (
+        <Badge color="blue" className="font-semibold">
+          {selectedAugs.length} active
+        </Badge>
       )}
-
-      {!enabled && (
-        <div className="px-5 py-8 text-center text-slate-400 text-sm">
-          Enable augmentation to select transformations.
-        </div>
-      )}
+      <Toggle
+        checked={enabled}
+        onChange={onEnabledChange}
+        id="toggle-augmentation-enable"
+        label={enabled ? 'Enabled' : 'Disabled'}
+      />
     </div>
+  )
+
+  return (
+    <SectionCard
+      number={3}
+      title="Image Augmentation"
+      subtitle="Select & configure geometric transformations"
+      icon={<Layers size={18} />}
+      color="#10b981"
+      headerAction={headerAction}
+      className="h-full"
+    >
+      <div className="flex flex-col gap-3">
+        {/* Sub-header controls when enabled */}
+        {enabled && (
+          <div className="flex items-center justify-between text-xs pb-1 border-b border-slate-100">
+            <span className="text-slate-500 font-medium">
+              Transformations ({selectedAugs.length} of {AUG_CARDS.length} selected)
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleSelectAll}
+                className="text-[11px] font-medium text-blue-600 hover:text-blue-800 hover:underline"
+              >
+                Select All
+              </button>
+              <span className="text-slate-300">|</span>
+              <button
+                type="button"
+                onClick={handleClearAll}
+                className="text-[11px] font-medium text-slate-500 hover:text-slate-700 hover:underline"
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Transformation Cards Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {AUG_CARDS.map(card => (
+            <AugCard
+              key={card.id}
+              card={card}
+              selected={enabled && isSelected(card.id)}
+              params={getConfig(card.id)?.params ?? card.defaultParams}
+              onToggle={() => toggleCard(card)}
+              onParamChange={(key, val) => updateParam(card.id, key, val)}
+              disabled={!enabled}
+            />
+          ))}
+        </div>
+
+        {/* Compact empty state / guidance */}
+        {!enabled && (
+          <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50/60 p-2.5 text-center">
+            <p className="text-xs text-slate-500 font-medium">Augmentation is currently disabled</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              Turn on the switch in the card header above to enable and customize transformations.
+            </p>
+          </div>
+        )}
+
+        {enabled && selectedAugs.length === 0 && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50/60 p-2 text-center text-xs text-amber-800">
+            Select at least one transformation card to preview or generate augmentations.
+          </div>
+        )}
+      </div>
+    </SectionCard>
   )
 }
 

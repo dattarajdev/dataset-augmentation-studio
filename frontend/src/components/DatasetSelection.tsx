@@ -26,7 +26,7 @@ const DatasetSelection: React.FC<Props> = ({
 
   const handleScan = async () => {
     if (!datasetPath.trim()) {
-      setError('Please enter a dataset path.')
+      setError('Please enter an input dataset path.')
       return
     }
     setScanning(true)
@@ -35,9 +35,10 @@ const DatasetSelection: React.FC<Props> = ({
       const result = await scanDataset(datasetPath)
       onScanComplete(result)
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-        || (err as Error)?.message
-        || 'Scan failed'
+      const msg =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
+        (err as Error)?.message ||
+        'Scan failed'
       setError(msg)
     } finally {
       setScanning(false)
@@ -48,122 +49,138 @@ const DatasetSelection: React.FC<Props> = ({
     <SectionCard
       number={1}
       title="Dataset Selection"
+      subtitle="Configure input and destination folders"
       icon={<Folder size={18} />}
       color="#3b82f6"
+      className="h-full"
     >
-      <div className="flex flex-col gap-4">
-        {/* Path inputs row */}
-        <div className="flex flex-col md:flex-row gap-4">
-          {/* Dataset folder */}
-          <div className="flex-1">
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
-              Input Dataset Folder
-            </label>
-            <div className="flex gap-2">
-              <div className="flex-1 flex items-center gap-2 border border-slate-300 rounded-lg px-3 py-2 bg-white focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500">
-                <FolderOpen size={16} className="text-slate-400 shrink-0" />
-                <input
-                  type="text"
-                  value={datasetPath}
-                  onChange={e => onDatasetPathChange(e.target.value)}
-                  placeholder="e.g. D:\datasets\my_dataset"
-                  className="flex-1 text-sm bg-transparent outline-none text-slate-800 placeholder-slate-400"
-                />
-              </div>
-            </div>
-            <p className="text-xs text-slate-400 mt-1">Expected structure: images/ and labels/</p>
+      <div className="flex flex-col gap-3.5">
+        {/* Input folder */}
+        <div>
+          <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">
+            Input Dataset Folder
+          </label>
+          <div className="flex items-center gap-2 border border-slate-300 rounded-lg px-3 py-2 bg-white focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-all">
+            <FolderOpen size={16} className="text-slate-400 shrink-0" />
+            <input
+              type="text"
+              value={datasetPath}
+              onChange={e => onDatasetPathChange(e.target.value)}
+              placeholder="e.g. D:\datasets\my_dataset"
+              className="w-full text-xs sm:text-sm bg-transparent outline-none text-slate-800 placeholder-slate-400"
+            />
           </div>
-
-          {/* Output folder */}
-          <div className="flex-1">
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
-              Output Folder
-            </label>
-            <div className="flex gap-2">
-              <div className="flex-1 flex items-center gap-2 border border-slate-300 rounded-lg px-3 py-2 bg-white focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500">
-                <FolderOpen size={16} className="text-slate-400 shrink-0" />
-                <input
-                  type="text"
-                  value={outputPath}
-                  onChange={e => onOutputPathChange(e.target.value)}
-                  placeholder="e.g. D:\augmented_dataset"
-                  className="flex-1 text-sm bg-transparent outline-none text-slate-800 placeholder-slate-400"
-                />
-              </div>
-            </div>
-            <p className="text-xs text-slate-400 mt-1">Augmented dataset will be saved here (originals preserved)</p>
-          </div>
-
-          {/* Scan button */}
-          <div className="flex items-end">
-            <Button
-              onClick={handleScan}
-              loading={scanning}
-              disabled={!datasetPath.trim()}
-              size="md"
-              className="whitespace-nowrap h-10"
-            >
-              <ScanLine size={16} />
-              Scan Dataset
-            </Button>
-          </div>
+          <p className="text-[11px] text-slate-400 mt-1">Requires images/ and labels/ subdirectories</p>
         </div>
 
-        {/* Error */}
+        {/* Output folder */}
+        <div>
+          <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">
+            Output Destination Folder
+          </label>
+          <div className="flex items-center gap-2 border border-slate-300 rounded-lg px-3 py-2 bg-white focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-all">
+            <FolderOpen size={16} className="text-slate-400 shrink-0" />
+            <input
+              type="text"
+              value={outputPath}
+              onChange={e => onOutputPathChange(e.target.value)}
+              placeholder="e.g. D:\augmented_output"
+              className="w-full text-xs sm:text-sm bg-transparent outline-none text-slate-800 placeholder-slate-400"
+            />
+          </div>
+          <p className="text-[11px] text-slate-400 mt-1">Augmented data and labels will be saved here</p>
+        </div>
+
+        {/* Scan Action */}
+        <div className="pt-0.5">
+          <Button
+            onClick={handleScan}
+            loading={scanning}
+            disabled={!datasetPath.trim()}
+            variant="primary"
+            size="md"
+            className="w-full justify-center shadow-xs"
+          >
+            <ScanLine size={16} />
+            Scan Dataset
+          </Button>
+        </div>
+
+        {/* Error notification */}
         {error && (
-          <Alert type="error">
-            <XCircle size={16} className="shrink-0 mt-0.5" />
+          <Alert type="error" className="fade-in">
+            <XCircle size={15} className="shrink-0 mt-0.5" />
             <span>{error}</span>
           </Alert>
         )}
 
-        {/* Stat cards */}
+        {/* Scanned summary & compact stats */}
         {scanResult && (
-          <div className="fade-in grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-            <StatCard
-              label="Images found"
-              value={scanResult.image_count}
-              icon={<ScanLine size={16} />}
-              color="#3b82f6"
-            />
-            <StatCard
-              label="Labels matched"
-              value={scanResult.label_count}
-              icon={<CheckCircle2 size={16} />}
-              color="#22c55e"
-            />
-            <StatCard
-              label="Missing labels"
-              value={scanResult.missing_labels}
-              icon={<AlertCircle size={16} />}
-              color="#f59e0b"
-              alert
-            />
-            <StatCard
-              label="Invalid annotations"
-              value={scanResult.invalid_annotations}
-              icon={<XCircle size={16} />}
-              color="#ef4444"
-              alert
-            />
-            <StatCard
-              label="Classes detected"
-              value={Object.keys(scanResult.class_distribution).length}
-              icon={<Folder size={16} />}
-              color="#8b5cf6"
-            />
+          <div className="fade-in flex flex-col gap-2.5 pt-1 border-t border-slate-100">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-semibold text-slate-700">Scan Summary</span>
+              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                <CheckCircle2 size={12} /> Verified
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              <StatCard
+                label="Images"
+                value={scanResult.image_count}
+                icon={<ScanLine size={14} />}
+                color="#3b82f6"
+                compact
+              />
+              <StatCard
+                label="Labels"
+                value={scanResult.label_count}
+                icon={<CheckCircle2 size={14} />}
+                color="#22c55e"
+                compact
+              />
+              <StatCard
+                label="Classes"
+                value={Object.keys(scanResult.class_distribution).length}
+                icon={<Folder size={14} />}
+                color="#8b5cf6"
+                compact
+              />
+              <StatCard
+                label="Missing"
+                value={scanResult.missing_labels}
+                icon={<AlertCircle size={14} />}
+                color="#f59e0b"
+                alert
+                compact
+              />
+              <StatCard
+                label="Invalid"
+                value={scanResult.invalid_annotations}
+                icon={<XCircle size={14} />}
+                color="#ef4444"
+                alert
+                compact
+              />
+            </div>
+
+            {scanResult.classes_file && scanResult.classes_file.length > 0 && (
+              <div className="text-[11px] text-slate-500 bg-slate-50 rounded-lg p-2 border border-slate-200/80">
+                <span className="font-semibold text-slate-600">Detected classes:</span>{' '}
+                {scanResult.classes_file.slice(0, 6).join(', ')}
+                {scanResult.classes_file.length > 6 ? '�' : ''}
+              </div>
+            )}
           </div>
         )}
 
-        {scanResult && (
-          <div className="flex items-center gap-2 text-xs text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
-            <CheckCircle2 size={14} />
-            <span>
-              Dataset scanned — {scanResult.image_count} images, {Object.keys(scanResult.class_distribution).length} classes
-              {scanResult.classes_file
-                ? ` (classes: ${scanResult.classes_file.slice(0, 5).join(', ')}${scanResult.classes_file.length > 5 ? '…' : ''})`
-                : ' (no classes.txt found)'}
-            </span>
+        {/* Compact empty state */}
+        {!scanResult && !error && (
+          <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50/50 p-3 text-center">
+            <p className="text-xs text-slate-500 font-medium">Ready to inspect</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              Enter dataset path and click Scan Dataset to load validation and preview.
+            </p>
           </div>
         )}
       </div>
